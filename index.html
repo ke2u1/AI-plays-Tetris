@@ -1,0 +1,2066 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tetris</title>
+
+  <!-- CSS -->
+  <link crossorigin="anonymous" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      font-family: "Open Sans", sans-serif;
+    }
+
+    #sketch {
+      display: inline-block;
+      align-items: center;
+      width: min-content;
+      margin: 25px;
+    }
+
+    #sketch canvas {
+      display: block;
+      margin: auto;
+    }
+
+    #settings-bb {
+      float: right;
+      margin-top: 50px;
+      width: calc(50% - 425px);
+      margin-bottom: 50px;
+    }
+
+    #settings {
+      width: 300px;
+      height: max-content;
+      text-align: center;
+      padding: 20px;
+
+      border: 1px solid black;
+      background-color: #fafafa;
+    }
+
+    #statistics-bb {
+      float: left;
+      margin-top: 70px;
+      width: calc(50% - 425px);
+    }
+
+    #statistics {
+      float: right;
+      width: 350px;
+      height: max-content;
+      text-align: center;
+      padding: 20px 20px 30px;
+
+      border: 1px solid black;
+      background-color: #fafafa;
+    }
+
+    .settings-row, .statistics-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3px 0;
+    }
+
+    .settings-row {
+      gap: 10px;
+    }
+
+    .statistics-row {
+      gap: 20px;
+    }
+
+    .settings-col-left, .statistics-col-left {
+      width: 50%;
+      text-align: right;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .settings-col-right, .statistics-col-right {
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .settings-col-right {
+      flex: 50%;
+      width: 50%;
+    }
+
+    .statistics-col-right, .statistics-col-split {
+      flex: 65%;
+      width: 65%;
+    }
+
+    .settings-switch {
+      display: inline-block;
+      margin-left: 20px;
+      width: 16px;
+      height: 16px;
+    }
+
+    .settings-number {
+      display: inline-block;
+      margin-left: 20px;
+      width: 50px;
+    }
+
+    .control-label {
+      margin-bottom: 0;
+    }
+
+    #settings-toggle {
+      display: block;
+      text-align: center;
+      padding: 1px 15px;
+      margin: 20px auto auto;
+    }
+
+    #settings-content {
+      position: relative;
+      overflow: hidden;
+      height: 450px;
+
+      transition: height 0.25s ease-in-out;
+      -webkit-transition: height 0.25s ease-in-out;
+      -moz-transition: height 0.25s ease-in-out;
+    }
+
+    #settings-content.collapsed {
+      height: 290px;
+    }
+
+    #basic-settings, #advanced-settings {
+      position: absolute;
+      width: 100%;
+      left: 0;
+
+      transition: left 0.25s ease-in-out;
+      -webkit-transition: left 0.25s ease-in-out;
+      -moz-transition: left 0.25s ease-in-out;
+    }
+
+    #basic-settings.collapsed {
+      left: -300px;
+    }
+
+    #basic-settings .settings-row {
+      padding: 5px 0;
+    }
+
+    #advanced-settings .settings-row {
+      padding: 5px 0;
+    }
+
+    #advanced-settings.collapsed {
+      left: 300px;
+    }
+
+    #advanced-settings label {
+      font-size: 85%;
+    }
+
+    #advanced-settings .settings-number, #advanced-settings .settings-switch {
+      margin-top: 0;
+      margin-bottom: 0;
+      margin-left: 10px;
+    }
+
+    #advanced-settings .settings-switch {
+      height: 0.9rem;
+    }
+
+    #advanced-settings .settings-number {
+      height: 1.4rem;
+      font-size: 0.85rem;
+    }
+
+    #advanced-settings .settings-col-left {
+      flex: 85%;
+    }
+
+    #advanced-settings .settings-col-right {
+      flex: 35%;
+    }
+
+    .statistics-col-left, .statistics-col-right, .statistics-col-split {
+      /*padding: 0 10px;*/
+    }
+
+    .statistics-number {
+      font-family: monospace;
+      font-size: 1.1rem;
+    }
+
+    .statistics-col-split {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .statistics-split-right {
+      flex: 20%;
+      text-align: right;
+      color: #555;
+    }
+
+    .statistics-split-right > .statistics-number {
+      display: inline-block;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .statistics-positive {
+      color: green;
+    }
+
+    .statistics-negative {
+      color: red;
+    }
+
+    #replay-btn-div {
+      position: absolute;
+      left: calc(50% + 195px);
+      top: 400px;
+      width: 100px;
+    }
+
+    #replay-btn {
+      visibility: hidden;
+    }
+
+    @media screen and (max-width: 1575px) {
+      #statistics-bb {
+        float: right;
+        margin-top: 0;
+      }
+
+      #settings, #statistics {
+        float: left;
+      }
+
+      #settings-bb, #statistics-bb {
+        width: 36%;
+      }
+
+      #sketch {
+        float: left;
+        margin-left: 25px;
+        width: 60%;
+      }
+
+      #replay-btn-div {
+        left: calc(30% + 220px);
+      }
+    }
+
+    @media screen and (max-width: 1330px) {
+      #settings-bb, #settings, #statistics-bb, #statistics {
+        float: none;
+      }
+
+      #settings-bb, #statistics-bb {
+        width: min-content;
+        height: min-content;
+        margin: 25px auto;
+      }
+
+      #sketch {
+        float: none;
+        display: block;
+        margin: 25px auto;
+        width: 100%;
+      }
+
+      #replay-btn-div {
+        left: calc(50% + 195px);
+      }
+    }
+
+    @media screen and (max-width: 820px) {
+      #replay-btn-div {
+        left: 595px;
+      }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div id="sketch"></div>
+  <div id="settings-bb">
+    <div id="settings">
+      <h5>Settings</h5>
+      <div id="settings-content" class="collapsed">
+        <div id="basic-settings">
+          <div id="enable-ai" class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="enable-ai-input">Enable AI</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="enable-ai-input" class="control-input settings-switch"
+                     onfocus="this.blur()" type="checkbox"/>
+            </div>
+          </div>
+          <div id="ai-delay" class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="ai-delay-input">AI Delay</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="ai-delay-input" class="control-input settings-number"
+                     min="-1" type="number" disabled/>
+            </div>
+          </div>
+          <div id="ai-parallel" class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="ai-parallel-input">Parallelize AI</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="ai-parallel-input" class="control-input settings-switch"
+                     onfocus="this.blur()" type="checkbox" disabled/>
+            </div>
+          </div>
+          <hr>
+          <div id="frame-rate" class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="frame-rate-input">Frame Rate</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="frame-rate-input" class="control-input settings-number"
+                     min="10"
+                     type="number"/>
+            </div>
+          </div>
+          <div id="drop-frames" class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="drop-frames-input">Drop Frames</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="drop-frames-input" class="control-input settings-number"
+                     min="0" type="number"/>
+            </div>
+          </div>
+          <div id="lock-frames" class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="lock-frames-input">Lock Frames</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="lock-frames-input" class="control-input settings-number"
+                     min="0" type="number"/>
+            </div>
+          </div>
+          <div id="show-hint" class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="show-hint-input">Show Hints</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="show-hint-input" class="control-input settings-switch"
+                     onfocus="this.blur()" type="checkbox"/>
+            </div>
+          </div>
+        </div>
+        <div id="advanced-settings" class="collapsed">
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="weight-line-clears">Line clears wt.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="weight-line-clears" class="control-input settings-number"
+                     min="0"
+                     type="number"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="weight-holes">Holes wt.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="weight-holes" class="control-input settings-number"
+                     min="0"
+                     type="number"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="weight-board-height">Board height wt.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="weight-board-height" class="control-input settings-number"
+                     min="0"
+                     type="number"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="weight-placement-height">Placement height wt.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="weight-placement-height" class="control-input settings-number"
+                     min="0"
+                     type="number"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="weight-avg-height-diff">Avg. height diff. wt.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="weight-avg-height-diff" class="control-input settings-number"
+                     min="0"
+                     type="number"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="weight-row-flip">Row flips wt.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="weight-row-flip" class="control-input settings-number"
+                     min="0"
+                     type="number"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="weight-col-flip">Col flips wt.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="weight-col-flip" class="control-input settings-number"
+                     min="0"
+                     type="number"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="weight-deepest-well">Deepest well wt.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="weight-deepest-well" class="control-input settings-number"
+                     min="0"
+                     type="number"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="scaled-holes">Holes scaled</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="scaled-holes" class="control-input settings-switch"
+                     type="checkbox"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="exp-holes">Holes scale exp.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="exp-holes" class="control-input settings-number"
+                     disabled
+                     min="0" step="0.01" type="number"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="scaled-board-height">Board height scaled</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="scaled-board-height" class="control-input settings-switch"
+                     type="checkbox"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="exp-board-height">Board height scale exp.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="exp-board-height" class="control-input settings-number"
+                     disabled
+                     min="0" step="0.01" type="number"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="scaled-placement-height">Placement height scaled</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="scaled-placement-height" class="control-input settings-switch"
+                     type="checkbox"/>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-col-left">
+              <label class="control-label" for="exp-placement-height">Placement height scale exp.</label>
+            </div>
+            <div class="settings-col-right">
+              <input id="exp-placement-height" class="control-input settings-number"
+                     disabled
+                     min="0" step="0.01" type="number"/>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr>
+      <button id="settings-toggle" class="btn btn-outline-dark" onfocus="this.blur()">
+        Advanced
+      </button>
+    </div>
+  </div>
+  <div id="statistics-bb">
+    <div id="statistics">
+      <h5>Statistics</h5>
+      <div class="statistics-row">
+        <div class="statistics-col-left">
+          <span>Current score</span>
+        </div>
+        <div class="statistics-col-right">
+          <span id="stats-current-score" class="statistics-number"></span>
+        </div>
+      </div>
+      <div class="statistics-row">
+        <div class="statistics-col-left">
+          <span>Line clears</span>
+        </div>
+        <div class="statistics-col-split">
+          <div class="statistics-split-left">
+            <span id="stats-line-clears" class="statistics-number"></span>
+          </div>
+          <div class="statistics-split-right">
+            (<span id="stats-line-clears-calc" class="statistics-number statistics-positive"></span>)
+          </div>
+        </div>
+      </div>
+      <div class="statistics-row">
+        <div class="statistics-col-left">
+          <span id="stats-holes-label">Holes (scaled)</span>
+        </div>
+        <div class="statistics-col-split">
+          <div class="statistics-split-left">
+            <span id="stats-holes" class="statistics-number"></span>
+          </div>
+          <div class="statistics-split-right">
+            (<span id="stats-holes-calc" class="statistics-number statistics-negative"></span>)
+          </div>
+        </div>
+      </div>
+      <div class="statistics-row">
+        <div class="statistics-col-left">
+          <span>Board height</span>
+        </div>
+        <div class="statistics-col-split">
+          <div class="statistics-split-left">
+            <span id="stats-board-height" class="statistics-number"></span>
+          </div>
+          <div class="statistics-split-right">
+            (<span id="stats-board-height-calc" class="statistics-number statistics-negative"></span>)
+          </div>
+        </div>
+      </div>
+      <div class="statistics-row">
+        <div class="statistics-col-left">
+          <span>Placement height</span>
+        </div>
+        <div class="statistics-col-split">
+          <div class="statistics-split-left">
+            <span id="stats-placement-height" class="statistics-number"></span>
+          </div>
+          <div class="statistics-split-right">
+            (<span id="stats-placement-height-calc" class="statistics-number statistics-negative"></span>)
+          </div>
+        </div>
+      </div>
+      <div class="statistics-row">
+        <div class="statistics-col-left">
+          <span>Avg. height diff.</span>
+        </div>
+        <div class="statistics-col-split">
+          <div class="statistics-split-left">
+            <span id="stats-avg-height-diff" class="statistics-number"></span>
+          </div>
+          <div class="statistics-split-right">
+            (<span id="stats-avg-height-diff-calc" class="statistics-number statistics-negative"></span>)
+          </div>
+        </div>
+      </div>
+      <div class="statistics-row">
+        <div class="statistics-col-left">
+          <span>Deepest well</span>
+        </div>
+        <div class="statistics-col-split">
+          <div class="statistics-split-left">
+            <span id="stats-deepest-well" class="statistics-number"></span>
+          </div>
+          <div class="statistics-split-right">
+            (<span id="stats-deepest-well-calc" class="statistics-number statistics-negative"></span>)
+          </div>
+        </div>
+      </div>
+      <div class="statistics-row">
+        <div class="statistics-col-left">
+          <span>Row/col flips</span>
+        </div>
+        <div class="statistics-col-split">
+          <div class="statistics-split-left">
+            <span id="stats-flips" class="statistics-number"></span>
+          </div>
+          <div class="statistics-split-right">
+            (<span id="stats-flips-calc" class="statistics-number statistics-negative"></span>)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<div id="replay-btn-div">
+  <button id="replay-btn" class="btn btn-outline-secondary" type="button">Play Again</button>
+</div>
+</body>
+
+<script crossorigin="anonymous"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script crossorigin="anonymous"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+<!-- p5js -->
+<script src="https://cdn.jsdelivr.net/npm/p5@1.1.9/lib/p5.js"></script>
+<!-- Parallel.js for AI (Note: functionality might be limited without proper web worker setup in a single file) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/parallel.js/1.0.0/parallel.min.js"></script>
+
+<script>
+  // TetrominoConstants.ts (converted to JS object)
+  const Rotation = {
+    SPAWN: 0,
+    CLOCKWISE: 1,
+    FLIP: 2,
+    COUNTERCLOCKWISE: 3
+  };
+
+  const TETROMINO_TYPE = {
+    I: {
+      shape: [[0, 0, 0, 0],
+        [1, 1, 1, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]],
+      color: "#31C7EF"
+    },
+    J: {
+      shape: [[1, 0, 0],
+        [1, 1, 1],
+        [0, 0, 0]
+      ],
+      color: "#5A65AD"
+    },
+    L: {
+      shape: [[0, 0, 1],
+        [1, 1, 1],
+        [0, 0, 0]],
+      color: "#EF7921"
+    },
+    O: {
+      shape: [[1, 1],
+        [1, 1]],
+      color: "#F7D308"
+    },
+    S: {
+      shape: [[0, 1, 1],
+        [1, 1, 0],
+        [0, 0, 0]],
+      color: "#42B642"
+    },
+    T: {
+      shape: [[0, 1, 0],
+        [1, 1, 1],
+        [0, 0, 0]],
+      color: "#AD4D9C"
+    },
+    Z: {
+      shape: [[1, 1, 0],
+        [0, 1, 1],
+        [0, 0, 0]],
+      color: "#EF2029"
+    }
+  };
+
+  const WALLKICK_TESTS = {
+    [Rotation.SPAWN]: {
+      [Rotation.CLOCKWISE]: [
+        [0, 0],
+        [0, -1],
+        [-1, -1],
+        [2, 0],
+        [2, -1]
+      ],
+      [Rotation.COUNTERCLOCKWISE]: [
+        [0, 0],
+        [0, 1],
+        [-1, 1],
+        [2, 0],
+        [2, 1]
+      ]
+    },
+    [Rotation.CLOCKWISE]: {
+      [Rotation.CLOCKWISE]: [
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [-2, 0],
+        [-2, 1]
+      ],
+      [Rotation.COUNTERCLOCKWISE]: [
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [-2, 0],
+        [-2, 1]
+      ]
+    },
+    [Rotation.FLIP]: {
+      [Rotation.CLOCKWISE]: [
+        [0, 0],
+        [0, 1],
+        [-1, 1],
+        [2, 0],
+        [2, 1]
+      ],
+      [Rotation.COUNTERCLOCKWISE]: [
+        [0, 0],
+        [0, -1],
+        [-1, -1],
+        [2, 0],
+        [2, -1]
+      ]
+    },
+    [Rotation.COUNTERCLOCKWISE]: {
+      [Rotation.CLOCKWISE]: [
+        [0, 0],
+        [0, -1],
+        [1, -1],
+        [-2, 0],
+        [-2, -1]
+      ],
+      [Rotation.COUNTERCLOCKWISE]: [
+        [0, 0],
+        [0, -1],
+        [1, -1],
+        [-2, 0],
+        [-2, -1]
+      ]
+    }
+  };
+
+  const WALLKICK_TESTS_I = {
+    [Rotation.SPAWN]: {
+      [Rotation.CLOCKWISE]: [
+        [0, 0],
+        [0, -2],
+        [0, 1],
+        [1, -2],
+        [-2, 1]
+      ],
+      [Rotation.COUNTERCLOCKWISE]: [
+        [0, 0],
+        [0, -1],
+        [0, 2],
+        [-2, -1],
+        [1, 2]
+      ]
+    },
+    [Rotation.CLOCKWISE]: {
+      [Rotation.CLOCKWISE]: [
+        [0, 0],
+        [0, -1],
+        [0, 2],
+        [-2, -1],
+        [1, 2]
+      ],
+      [Rotation.COUNTERCLOCKWISE]: [
+        [0, 0],
+        [0, 2],
+        [0, -1],
+        [-1, 2],
+        [2, -1]
+      ]
+    },
+    [Rotation.FLIP]: {
+      [Rotation.CLOCKWISE]: [
+        [0, 0],
+        [0, 2],
+        [0, -1],
+        [-1, 2],
+        [2, -1]
+      ],
+      [Rotation.COUNTERCLOCKWISE]: [
+        [0, 0],
+        [0, 1],
+        [0, -2],
+        [2, 1],
+        [-1, -2]
+      ]
+    },
+    [Rotation.COUNTERCLOCKWISE]: {
+      [Rotation.CLOCKWISE]: [
+        [0, 0],
+        [0, 1],
+        [0, -2],
+        [2, 1],
+        [-1, -2]
+      ],
+      [Rotation.COUNTERCLOCKWISE]: [
+        [0, 0],
+        [0, -2],
+        [0, 1],
+        [1, -2],
+        [-2, 1]
+      ]
+    }
+  };
+
+  // config.ts
+  const CONFIG = {
+    board_tl: { x: 0, y: 0 },
+    board_w: 300,
+    board_h: 600,
+    rows: 20,
+    cols: 10,
+    tilesize: 30,
+
+    tetromino_stroke: 190,
+    ghost_alpha: 51,
+    aitarget_alpha: 100,
+    hint_alpha: 17,
+
+    dropFrames: 30,
+    dropLockFrames: 30,
+    frameRate: 30,
+    autoShiftDelay: 10,
+    repeatDelay: 1,
+
+    aiEnabled: false,
+    aiDelay: 1,
+    aiParallel: true,
+    showHint: false,
+
+    weight_lineclears: 200,
+    weight_holes: 300,
+    scaled_holes: true,
+    exp_holes: 0.66,
+    weight_boardheight: 8,
+    scaled_boardheight: true,
+    exp_boardheight: 2,
+    weight_placementheight: 5,
+    scaled_placementheight: true,
+    exp_placementheight: 2,
+    weight_avgheightdiff: 75,
+    aiturnimprovement: 100,
+    weight_rowflip: 20,
+    weight_colflip: 20,
+    weight_deepestwell: 100
+  };
+
+  const MINSETTINGS = {
+    aiDelay: -1,
+    frameRate: 10,
+    dropFrames: 0,
+    dropLockFrames: 0,
+    weight_lineclears: 0,
+    weight_holes: 0,
+    weight_boardheight: 0,
+    weight_placementheight: 0,
+    weight_avgheightdiff: 0,
+    weight_rowflip: 0,
+    weight_colflip: 0,
+    weight_deepestwell: 0,
+    exp_holes: 0,
+    exp_boardheight: 0,
+    exp_placementheight: 0
+  };
+
+  // Tetromino.ts
+  const rotateFromState = (state, rotation) => {
+    return (state + rotation) % 4;
+  };
+
+  class Tetromino {
+    constructor(p, kind, r, c, rotation) {
+      this._p = p;
+      this.kind = kind;
+      this.r = r;
+      this.c = c;
+      this.rotation = rotation;
+    }
+
+    draw(alpha) {
+      this.drawat(this.r, this.c, 1, alpha);
+    }
+
+    drawat(r, c, scale, alpha) {
+      const tetColor = TETROMINO_TYPE[this.kind].color;
+      this._p.stroke(CONFIG.tetromino_stroke);
+      if (alpha) {
+        const colorWithAlpha = this._p.color(tetColor);
+        colorWithAlpha.setAlpha(alpha);
+        this._p.fill(colorWithAlpha);
+      } else {
+        this._p.fill(tetColor);
+      }
+      if (scale === 0.75) {
+        if (this.kind === "I") {
+          c -= 0.375;
+        }
+        if (this.kind === "O") {
+          c += 0.375;
+        }
+      }
+      const shape = this.getShape();
+      for (let shape_r = 0; shape_r < shape.length; shape_r++) {
+        for (let shape_c = 0; shape_c < shape[shape_r].length; shape_c++) {
+          if (shape[shape_r][shape_c] && r + shape_r >= 0) {
+            this._p.rect(CONFIG.board_tl.x + CONFIG.tilesize * c + CONFIG.tilesize * shape_c * scale,
+              CONFIG.board_tl.y + CONFIG.tilesize * r + CONFIG.tilesize * shape_r * scale,
+              CONFIG.tilesize * scale, CONFIG.tilesize * scale);
+          }
+        }
+      }
+    }
+
+    moveDown() {
+      this.r += 1;
+    }
+
+    getShape() {
+      return this.getRotation(Rotation.SPAWN);
+    }
+
+    getRotation(direction) {
+      const shape = TETROMINO_TYPE[this.kind].shape;
+      return this.getRotationFromShape(shape, rotateFromState(this.rotation, direction));
+    }
+
+    copy() {
+      return new Tetromino(this._p, this.kind, this.r, this.c, this.rotation);
+    }
+
+    reset() {
+      this.rotation = Rotation.SPAWN;
+      this.r = -2;
+      this.c = this.kind === "O" ? 4 : 3;
+    }
+
+    toString() {
+      return `${this.kind}/${this.r}/${this.c}/${this.rotation}`;
+    }
+
+    rotate(direction) {
+      this.rotation = rotateFromState(this.rotation, direction);
+    }
+
+    rotateValid(board, direction) {
+      const [isValid, [dr, dc]] = board.isValidRotation(this, direction);
+      if (isValid) {
+        this.rotate(direction);
+        this.r += dr;
+        this.c += dc;
+      }
+      return isValid;
+    }
+
+    getRotationFromShape(shape, direction) {
+      if (direction === Rotation.SPAWN) {
+        return shape;
+      }
+
+      const newShape = shape.map(row => row.slice());
+      const size = shape.length;
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          switch (direction) {
+            case Rotation.COUNTERCLOCKWISE:
+              newShape[r][c] = shape[c][size - r - 1];
+              break;
+            case Rotation.CLOCKWISE:
+              newShape[r][c] = shape[size - c - 1][r];
+              break;
+            case Rotation.FLIP:
+              newShape[r][c] = shape[size - r - 1][size - c - 1];
+              break;
+          }
+        }
+      }
+      return newShape;
+    }
+  }
+
+  // AI.ts
+  const AIStep = {
+    RIGHT: "R",
+    LEFT: "L",
+    DROP: "D",
+    CLOCKWISE: "C",
+    COUNTERCLOCKWISE: "c",
+    HOLD: "H",
+    DOWN: "d"
+  };
+
+  class AI {
+    constructor(p, board) {
+      this._p = p;
+      this.board = board;
+      this.toExecute = null;
+      this.framesUntilNext = CONFIG.aiDelay;
+    }
+
+    aistep() {
+      if (!CONFIG.aiEnabled) {
+        return;
+      }
+      if (!this.toExecute) {
+        this.framesUntilNext = CONFIG.aiDelay;
+        this.toExecute = this.selectDest(this.board.framesUntilDrop);
+        this.displayScore(this.toExecute);
+      }
+      if (this.framesUntilNext > 0) {
+        this.framesUntilNext--;
+        return;
+      }
+      this.framesUntilNext = CONFIG.aiDelay;
+
+      if (this.toExecute.steps.length === 0) {
+        this.toExecute = null;
+        return;
+      }
+
+      let nextStepNumber, nextStep;
+      const curStepNumber = this.board.curTetromino.r;
+      if (CONFIG.aiDelay < 0) {
+        ({ step: nextStep, stepNumber: nextStepNumber } = this.toExecute.steps.shift());
+      } else {
+        do {
+          ({ step: nextStep, stepNumber: nextStepNumber } = this.toExecute.steps[0]);
+          if (nextStepNumber > curStepNumber) {
+            return;
+          } else {
+            this.toExecute.steps.shift();
+          }
+          if (this.toExecute.steps.length === 0) {
+            break;
+          }
+        } while (nextStep === AIStep.DOWN && curStepNumber !== nextStepNumber);
+      }
+
+      switch (nextStep) {
+        case AIStep.RIGHT:
+          this.board.move(this.board.curTetromino, 0, 1);
+          break;
+        case AIStep.LEFT:
+          this.board.move(this.board.curTetromino, 0, -1);
+          break;
+        case AIStep.DROP:
+          this.board.moveDrop(this.board.curTetromino);
+          break;
+        case AIStep.CLOCKWISE:
+          this.board.rotate(this.board.curTetromino, Rotation.CLOCKWISE);
+          break;
+        case AIStep.COUNTERCLOCKWISE:
+          this.board.rotate(this.board.curTetromino, Rotation.COUNTERCLOCKWISE);
+          break;
+        case AIStep.DOWN:
+          if (this.board.curTetromino.r <= nextStepNumber) {
+            this.board.move(this.board.curTetromino, 1, 0);
+          }
+          break;
+        case AIStep.HOLD:
+          this.board.hold();
+          break;
+      }
+
+      if (this.toExecute !== null) {
+        if (this.toExecute.steps.length === 0) {
+          this.toExecute = null;
+        }
+        if (CONFIG.aiDelay === -1) {
+          this.aistep();
+        }
+      }
+    }
+
+    getbestlist(initialDropFrames) {
+      const curTet = this.board.curTetromino.copy();
+      let altTet;
+      let nextTet;
+      if (this.board.heldTetromino != null) {
+        altTet = this.board.heldTetromino.copy();
+        nextTet = this.board.nextTetromino.copy();
+      } else {
+        altTet = this.board.nextTetromino.copy();
+      }
+      let posList = this.bfsEndPositions(curTet.copy(), altTet.copy(), initialDropFrames);
+
+      let scoreList = posList.map(pos => this.getScore(pos));
+      const sortedScoreList = scoreList.slice();
+      sortedScoreList.sort((a, b) => b - a);
+      const percentile = CONFIG.aiParallel ? Math.floor(scoreList.length / 2) : Math.floor(scoreList.length / 4);
+      let cutoff = sortedScoreList[percentile];
+      if (cutoff === sortedScoreList[0]) {
+        cutoff -= 1;
+      }
+      posList = posList.filter((_pos, idx) => scoreList[idx] > cutoff);
+      scoreList = scoreList.filter(score => score > cutoff);
+
+      scoreList = scoreList.map(score => score + CONFIG.aiturnimprovement);
+
+      const prevArr = this.board.arr.map(a => a.slice());
+      const processPos = (pos) => {
+        this.board.place(pos.tet);
+        this.board.checkLineClears(false);
+        let nextStart, nextAlt;
+        if (nextTet === undefined) {
+          nextStart = pos.tet.kind === curTet.kind ? altTet.copy() : curTet.copy();
+          nextAlt = undefined;
+        } else if (pos.tet.kind === curTet.kind) {
+          nextStart = nextTet.copy();
+          nextAlt = altTet.copy();
+        } else {
+          nextStart = altTet.copy();
+          nextAlt = nextTet.copy();
+        }
+        const nextPosList = this.bfsEndPositions(nextStart, nextAlt, CONFIG.dropFrames, false);
+        const nextScoreList = nextPosList.map(nextPos => this.getScore(nextPos));
+
+        this.board.arr = prevArr.map(a => a.slice());
+        return Math.max(...nextScoreList);
+      };
+
+      // Inlining Parallel.js for simple single-file deployment.
+      // The original `p.map().then()` structure implies asynchronous web workers,
+      // which is complex to embed directly. For direct execution in one file,
+      // we perform the map synchronously. The `CONFIG.aiParallel` flag will still
+      // exist but its effect on actual parallel computation is removed here.
+      let nextScores = posList.map(processPos);
+
+      const maxScore = Math.max(...nextScores, ...scoreList);
+      return posList.filter((_pos, idx) => scoreList[idx] === maxScore || nextScores[idx] === maxScore);
+    }
+
+    selectDest(initialDropFrames) {
+      const bestList = this.getbestlist(initialDropFrames);
+      let toExecute;
+      if (bestList.length === 1) {
+        toExecute = bestList[0];
+      } else {
+        const randIndex = Math.floor(Math.random() * Math.floor(bestList.length));
+        toExecute = bestList[randIndex];
+      }
+      return toExecute;
+    }
+
+    getPotential(tet) {
+      const prevArr = this.board.arr.map(a => a.slice());
+      const finalTet = this.board.getGhost(tet);
+      this.board.place(finalTet);
+      const curArr = this.board.arr.map(a => a.slice());
+      this.board.arr = prevArr;
+      return {
+        steps: [],
+        row: finalTet.r,
+        col: finalTet.c,
+        arr: curArr,
+        tet: finalTet
+      };
+    }
+
+    bfsEndPositions(curTet, nextTet, initialDropFrames, storeSteps = true) {
+      const possibilities = [];
+      const visited = new Set();
+      const visited_dropped = new Set();
+
+      const queue = [{ cur: curTet.copy(), prevSteps: [], dropFrames: initialDropFrames, lockFrames: null }];
+
+      if (nextTet !== undefined) {
+        const holdSteps = [{ stepNumber: -999, step: AIStep.HOLD }];
+        queue.push({
+          cur: nextTet.copy(),
+          prevSteps: storeSteps ? holdSteps : [],
+          dropFrames: 0,
+          lockFrames: null
+        });
+      }
+
+      let curAIDelay = this.framesUntilNext - 1;
+
+      while (queue.length > 0) {
+        const queueItem = queue.shift();
+        let cur = queueItem.cur;
+        const prevSteps = queueItem.prevSteps;
+        let nextDropFrames = queueItem.dropFrames;
+        let nextLockFrames = queueItem.lockFrames;
+
+        let mustDrop = false;
+
+        const onGround = !this.board.isValidMovement(cur, 1, 0);
+        if (nextLockFrames === null && onGround) {
+          nextLockFrames = CONFIG.dropLockFrames;
+        } else if (nextLockFrames !== null && !onGround) {
+          nextLockFrames = null;
+        }
+
+        cur = cur.copy();
+        for (let delayFrame = 0; delayFrame <= curAIDelay; delayFrame++) {
+          if (nextLockFrames != null) {
+            if (nextLockFrames <= 0) {
+              mustDrop = true;
+              break;
+            } else {
+              nextLockFrames--;
+            }
+          } else {
+            if (nextDropFrames <= 0) {
+              if (this.board.isValidMovement(cur, 1, 0)) {
+                cur.r++;
+                nextDropFrames = CONFIG.dropFrames;
+                if (!this.board.isValidMovement(cur, 1, 0)) {
+                  nextLockFrames = CONFIG.dropLockFrames;
+                }
+              } else {
+                mustDrop = true;
+                break;
+              }
+            } else {
+              nextDropFrames--;
+            }
+          }
+        }
+
+        if (curAIDelay !== CONFIG.aiDelay) {
+          curAIDelay = CONFIG.aiDelay;
+        }
+
+        const dropped = this.board.getGhost(cur);
+        if (!visited_dropped.has(dropped.toString()) && this.board.isValidMovement(dropped, 0, 0)) {
+          visited_dropped.add(dropped.toString());
+
+          const prevArr = this.board.arr.map(a => a.slice());
+          this.board.place(dropped);
+          const curArr = this.board.arr;
+          this.board.arr = prevArr;
+
+          const finalSteps = prevSteps.slice();
+          if (storeSteps && !mustDrop) {
+            finalSteps.push({ stepNumber: cur.r, step: AIStep.DROP });
+          }
+
+          const potential = {
+            arr: curArr,
+            row: dropped.r,
+            col: dropped.c,
+            steps: storeSteps ? finalSteps : [],
+            tet: dropped
+          };
+          possibilities.push(potential);
+        }
+
+        if (mustDrop) {
+          continue;
+        }
+
+        const possibleRotations = [Rotation.CLOCKWISE, Rotation.COUNTERCLOCKWISE];
+        for (const rotation of possibleRotations) {
+          const step = rotation === Rotation.CLOCKWISE ? AIStep.CLOCKWISE : AIStep.COUNTERCLOCKWISE;
+          const next = cur.copy();
+          const validRotation = next.rotateValid(this.board, rotation);
+          if (validRotation && !visited.has(next.toString())) {
+            if (storeSteps) {
+              const nextSteps = prevSteps.slice();
+              nextSteps.push({ stepNumber: cur.r, step: step });
+              queue.push({ cur: next, prevSteps: nextSteps, dropFrames: nextDropFrames, lockFrames: nextLockFrames });
+            } else {
+              queue.push({ cur: next, prevSteps: [], dropFrames: nextDropFrames, lockFrames: nextLockFrames });
+            }
+            visited.add(next.toString());
+          }
+        }
+
+        if (this.board.isValidMovement(cur, 0, -1)) {
+          const next = cur.copy();
+          next.c -= 1;
+          if (!visited.has(next.toString())) {
+            if (storeSteps) {
+              const nextSteps = prevSteps.slice();
+              nextSteps.push({ stepNumber: cur.r, step: AIStep.LEFT });
+              queue.push({ cur: next, prevSteps: nextSteps, dropFrames: nextDropFrames, lockFrames: nextLockFrames });
+            } else {
+              queue.push({ cur: next, prevSteps: [], dropFrames: nextDropFrames, lockFrames: nextLockFrames });
+            }
+            visited.add(next.toString());
+          }
+        }
+
+        if (this.board.isValidMovement(cur, 0, 1)) {
+          const next = cur.copy();
+          next.c += 1;
+          if (!visited.has(next.toString())) {
+            if (storeSteps) {
+              const nextSteps = prevSteps.slice();
+              nextSteps.push({ stepNumber: cur.r, step: AIStep.RIGHT });
+              queue.push({ cur: next, prevSteps: nextSteps, dropFrames: nextDropFrames, lockFrames: nextLockFrames });
+            } else {
+              queue.push({ cur: next, prevSteps: [], dropFrames: nextDropFrames, lockFrames: nextLockFrames });
+            }
+            visited.add(next.toString());
+          }
+        }
+
+        if (this.board.isValidMovement(cur, 1, 0)) {
+          const next = cur.copy();
+          next.r += 1;
+          if (!visited.has(next.toString())) {
+            if (storeSteps) {
+              const nextSteps = prevSteps.slice();
+              nextSteps.push({ stepNumber: cur.r, step: AIStep.DOWN });
+              queue.push({ cur: next, prevSteps: nextSteps, dropFrames: nextDropFrames, lockFrames: nextLockFrames });
+            } else {
+              queue.push({ cur: next, prevSteps: [], dropFrames: nextDropFrames, lockFrames: nextLockFrames });
+            }
+            visited.add(next.toString());
+          }
+        }
+      }
+      return possibilities;
+    }
+
+    getScore(potential) {
+      let score = 0;
+      const stats = this.getStatistics(potential);
+      score += CONFIG.weight_lineclears * stats.lineClears;
+      if (CONFIG.scaled_holes) {
+        score -= CONFIG.weight_holes * stats.scaledHoles;
+      } else {
+        score -= CONFIG.weight_holes * stats.totalHoles;
+      }
+      if (CONFIG.scaled_boardheight) {
+        score -= CONFIG.weight_boardheight * stats.scaledBoardHeight;
+      } else {
+        score -= CONFIG.weight_boardheight * stats.boardHeight;
+      }
+      if (CONFIG.scaled_placementheight) {
+        score -= CONFIG.weight_placementheight * stats.scaledPlacementHeight;
+      } else {
+        score -= CONFIG.weight_placementheight * stats.placementHeight;
+      }
+      score -= CONFIG.weight_avgheightdiff * stats.avgHeightDiff;
+      score -= CONFIG.weight_deepestwell * stats.deepestWell;
+      score -= CONFIG.weight_rowflip * stats.rowFlips;
+      score -= CONFIG.weight_colflip * stats.colFlips;
+      return score;
+    }
+
+    getStatistics(potential) {
+      const stats = {};
+      const potentialArr = potential.arr;
+      stats.lineClears = 0;
+      for (let r = 0; r < CONFIG.rows; r++) {
+        if (!potentialArr[r].includes(0)) {
+          stats.lineClears += 1;
+        }
+      }
+
+      const arr = potentialArr.map(row => row.slice());
+      for (let r = 0; r < CONFIG.rows; r++) {
+        if (!arr[r].includes(0)) {
+          arr.splice(r, 1);
+          arr.splice(0, 0, Array(CONFIG.cols).fill(0));
+        }
+      }
+
+      stats.totalHoles = 0;
+      stats.scaledHoles = 0;
+      for (let c = 0; c < CONFIG.cols; c++) {
+        const firstTile = arr.findIndex(row => row[c] !== 0);
+        if (firstTile === -1) {
+          continue;
+        }
+        let numHoles = 0;
+        for (let r = firstTile; r < CONFIG.rows; r++) {
+          if (arr[r][c] === 0) {
+            numHoles++;
+            stats.totalHoles++;
+          }
+        }
+        stats.scaledHoles += Math.pow(numHoles, CONFIG.exp_holes);
+      }
+      const firstRowWithTile = arr.findIndex(row => !row.every(item => item === 0));
+      stats.boardHeight = CONFIG.rows - firstRowWithTile;
+      stats.scaledBoardHeight = Math.pow(stats.boardHeight, CONFIG.exp_boardheight);
+      stats.placementHeight = CONFIG.rows - potential.row;
+      stats.scaledPlacementHeight = Math.pow(CONFIG.rows - potential.row, CONFIG.exp_placementheight);
+      const heights = [];
+      for (let c = 0; c < CONFIG.cols; c++) {
+        const ht = arr.findIndex(row => row[c] !== 0);
+        if (ht === -1) {
+          heights.push(0);
+        } else {
+          heights.push(CONFIG.rows - ht);
+        }
+      }
+      let sumHeightDiffs = 0;
+      for (let c = 1; c < CONFIG.cols; c++) {
+        sumHeightDiffs += Math.abs(heights[c] - heights[c - 1]);
+      }
+      stats.avgHeightDiff = sumHeightDiffs / (CONFIG.cols - 1);
+      let deepestWell = 0;
+      for (let c = 0; c < CONFIG.cols; c++) {
+        let leftHeight = c === 0 ? null : heights[c - 1];
+        let rightHeight = c === CONFIG.cols - 1 ? null : heights[c + 1];
+        if (leftHeight === null) {
+          leftHeight = rightHeight;
+        } else if (rightHeight === null) {
+          rightHeight = leftHeight;
+        }
+        const curHeight = heights[c];
+        if (leftHeight > curHeight && curHeight < rightHeight) {
+          deepestWell = Math.max(deepestWell, Math.min(leftHeight - curHeight, rightHeight - curHeight));
+        }
+      }
+      stats.deepestWell = deepestWell;
+      let rowFlips = 0;
+      let colFlips = 0;
+      for (let r = 1; r < CONFIG.rows; r++) {
+        for (let c = 1; c < CONFIG.cols; c++) {
+          const curEmpty = arr[r][c] === 0;
+          const aboveEmpty = arr[r - 1][c] === 0;
+          const leftEmpty = arr[r][c - 1] === 0;
+          if (curEmpty ^ aboveEmpty) {
+            colFlips++;
+          }
+          if (curEmpty ^ leftEmpty) {
+            rowFlips++;
+          }
+        }
+      }
+      stats.rowFlips = rowFlips;
+      stats.colFlips = colFlips;
+      return stats;
+    }
+
+    displayScore(potential) {
+      const HTMLscore = document.getElementById("stats-current-score");
+      const HTMLlineclears = document.getElementById("stats-line-clears");
+      const HTMLlineclearscalc = document.getElementById("stats-line-clears-calc");
+      const HTMLholes = document.getElementById("stats-holes");
+      const HTMLholescalc = document.getElementById("stats-holes-calc");
+      const HTMLboardheight = document.getElementById("stats-board-height");
+      const HTMLboardheightcalc = document.getElementById("stats-board-height-calc");
+      const HTMLplacementheight = document.getElementById("stats-placement-height");
+      const HTMLplacementheightcalc = document.getElementById("stats-placement-height-calc");
+      const HTMLavgheightdiff = document.getElementById("stats-avg-height-diff");
+      const HTMLavgheightdiffcalc = document.getElementById("stats-avg-height-diff-calc");
+      const HTMLdeepestwell = document.getElementById("stats-deepest-well");
+      const HTMLdeepestwellcalc = document.getElementById("stats-deepest-well-calc");
+      const HTMLflips = document.getElementById("stats-flips");
+      const HTMLflipscalc = document.getElementById("stats-flips-calc");
+      const score = this.board.ai.getScore(potential);
+      const stats = this.board.ai.getStatistics(potential);
+      HTMLscore.innerHTML = ((score < 0) ? "" : "&nbsp;") + (Math.round(score * 100) / 100);
+      HTMLlineclears.innerText = String(stats.lineClears);
+      HTMLlineclearscalc.innerText = String(Math.round(CONFIG.weight_lineclears * stats.lineClears * 100) / 100);
+      HTMLholes.innerText = String(Math.round((CONFIG.scaled_holes ? stats.scaledHoles : stats.totalHoles) * 100) / 100);
+      HTMLholescalc.innerText = String(Math.round(-CONFIG.weight_holes *
+        (CONFIG.scaled_holes ? stats.scaledHoles : stats.totalHoles) * 100) / 100);
+      HTMLboardheight.innerText = String(Math.round(stats.boardHeight * 100) / 100);
+      HTMLboardheightcalc.innerText = String(Math.round(-CONFIG.weight_boardheight *
+        (CONFIG.scaled_boardheight ? stats.scaledBoardHeight : stats.boardHeight) * 100) / 100);
+      HTMLplacementheight.innerText = String(Math.round(stats.placementHeight * 100) / 100);
+      HTMLplacementheightcalc.innerText = String(Math.round(-CONFIG.weight_placementheight *
+        (CONFIG.scaled_placementheight ? stats.scaledPlacementHeight : stats.placementHeight) * 100) / 100);
+      HTMLavgheightdiff.innerText = String(Math.round(stats.avgHeightDiff * 100) / 100);
+      HTMLavgheightdiffcalc.innerText = String(
+        Math.round(-CONFIG.weight_avgheightdiff * stats.avgHeightDiff * 100) / 100);
+      HTMLdeepestwell.innerText = String(stats.deepestWell);
+      HTMLdeepestwellcalc.innerText = String(-stats.deepestWell * CONFIG.weight_deepestwell);
+      HTMLflips.innerText = String(stats.rowFlips + stats.colFlips);
+      HTMLflipscalc.innerText = String(-stats.rowFlips * CONFIG.weight_rowflip - stats.colFlips * CONFIG.weight_colflip);
+    }
+  }
+
+  // Board.ts
+  const PressedKey = {
+    LEFT: 0,
+    RIGHT: 1,
+    DOWN: 2
+  };
+
+  class Board {
+    constructor(p, x, y, w, h) {
+      this._p = p;
+      this.x = x;
+      this.y = y;
+      this.w = w;
+      this.h = h;
+
+      this.tileSize = this.w / 10;
+
+      this.arr = Array(CONFIG.rows).fill(0).map(() => Array(CONFIG.cols).fill(0));
+
+      this.refillBag();
+
+      this.curTetromino = this.curBag.pop();
+      this.nextTetromino = this.curBag.pop();
+      this.heldTetromino = null;
+
+      this.framesUntilDrop = CONFIG.dropFrames;
+      this.framesUntilLock = -1;
+      this.hasHeld = false;
+      this.lineClears = 0;
+      this.gameOver = false;
+      this.pressedKey = null;
+
+      this.ai = new AI(p, this);
+    }
+
+    refillBag() {
+      this.curBag = [new Tetromino(this._p, "O", -2, 4, Rotation.SPAWN)];
+      for (const kind of ["I", "J", "L", "S", "T", "Z"]) {
+        this.curBag.push(new Tetromino(this._p, kind, -2, 3, Rotation.SPAWN));
+      }
+      this.curBag = this._p.shuffle(this.curBag);
+    }
+
+    draw() {
+      this.drawBoard();
+
+      if (CONFIG.aiEnabled && this.ai.toExecute) {
+        const aitarget = this.ai.toExecute.tet;
+        aitarget.draw(CONFIG.aitarget_alpha);
+      } else if (!CONFIG.aiEnabled && CONFIG.showHint) {
+        if (this.ai.toExecute == null) {
+          this.ai.toExecute = this.ai.selectDest(Infinity);
+        }
+        this.ai.toExecute.tet.draw(CONFIG.hint_alpha);
+      }
+
+      this.curTetromino.draw();
+      this.nextTetromino.drawat(1.5, CONFIG.cols + 2, 0.75);
+      if (this.heldTetromino) {
+        this.heldTetromino.drawat(1.5, -2 - 3 * 0.75, 0.75);
+      }
+
+      if (this.framesUntilRepeatStart !== null) {
+        if (this.framesUntilRepeatStart > 0) {
+          this.framesUntilRepeatStart--;
+        } else {
+          if (this.framesUntilRepeat > 0) {
+            this.framesUntilRepeat--;
+          } else {
+            this.framesUntilRepeat = CONFIG.repeatDelay;
+
+            switch (this.pressedKey) {
+              case PressedKey.LEFT:
+                this.move(this.curTetromino, 0, -1);
+                break;
+              case PressedKey.RIGHT:
+                this.move(this.curTetromino, 0, 1);
+                break;
+              case PressedKey.DOWN:
+                this.move(this.curTetromino, 1, 0);
+                break;
+            }
+          }
+        }
+      }
+
+      if (!this.gameOver) {
+        this.getGhost(this.curTetromino).draw(CONFIG.ghost_alpha);
+
+        const onGround = !this.isValidMovement(this.curTetromino, 1, 0);
+        if (this.framesUntilLock !== null && !onGround) {
+          this.framesUntilLock = null;
+        }
+
+        if (this.framesUntilLock !== null) {
+          if (this.framesUntilLock > 0) {
+            this.framesUntilLock--;
+          } else if (this.framesUntilLock === 0) {
+            this.placeCurTetromino();
+            this.framesUntilLock = null;
+            this.framesUntilDrop = CONFIG.dropFrames;
+          }
+        } else {
+          if (this.framesUntilDrop > 0) {
+            this.framesUntilDrop--;
+          } else {
+            this.framesUntilDrop = CONFIG.dropFrames;
+
+            if (this.isValidMovement(this.curTetromino, 1, 0)) {
+              this.curTetromino.moveDown();
+              if (!this.isValidMovement(this.curTetromino, 1, 0)) {
+                this.framesUntilLock = CONFIG.dropLockFrames;
+              }
+            } else {
+              this.placeCurTetromino();
+            }
+          }
+        }
+        this.ai.aistep();
+      }
+    }
+
+    drawBoard() {
+      this._p.fill(230);
+      this._p.noStroke();
+      this._p.rect(this.x, this.y, this.w, this.h);
+
+      this._p.noFill();
+      this._p.stroke(190);
+      for (let r = 0; r < CONFIG.rows; r++) {
+        for (let c = 0; c < CONFIG.cols; c++) {
+          const arrVal = this.arr[r][c];
+          if (arrVal) {
+            this._p.fill(arrVal);
+          } else {
+            this._p.noFill();
+          }
+          this._p.rect(this.x + this.tileSize * c, this.y + this.tileSize * r, this.tileSize, this.tileSize);
+        }
+      }
+
+      this._p.noFill();
+      this._p.stroke(0);
+      this._p.strokeWeight(2);
+      this._p.rect(this.x, this.y, this.w, this.h);
+      this._p.strokeWeight(1);
+
+      this._p.fill(230);
+      this._p.stroke(0);
+      this._p.strokeWeight(2);
+      this._p.rect(this.x + this.w + CONFIG.tilesize * (1.5 - 0.25), this.y + CONFIG.tilesize, CONFIG.tilesize * 5 * 0.75, CONFIG.tilesize * 2.75);
+      this._p.rect(this.x - CONFIG.tilesize * (1.5 + 5 * 0.75 - 0.25), this.y + CONFIG.tilesize, CONFIG.tilesize * 5 * 0.75, CONFIG.tilesize * 2.75);
+      this._p.strokeWeight(1);
+    }
+
+    move(tetromino, dr, dc) {
+      if (this.isValidMovement(tetromino, dr, dc)) {
+        tetromino.r += dr;
+        tetromino.c += dc;
+      }
+
+      const onGround = !this.isValidMovement(tetromino, 1, 0);
+      if (this.framesUntilLock === null && onGround) {
+        this.framesUntilLock = CONFIG.dropLockFrames;
+      } else if (this.framesUntilLock !== null && !onGround) {
+        this.framesUntilLock = null;
+      }
+    }
+
+    moveDrop(tetromino) {
+      const ghostTet = this.getGhost(tetromino);
+      this.curTetromino.r = ghostTet.r;
+      this.placeCurTetromino();
+    }
+
+    rotate(tetromino, direction) {
+      const [validRotation, [dr, dc]] = this.isValidRotation(tetromino, direction);
+      if (validRotation) {
+        tetromino.rotate(direction);
+        tetromino.r += dr;
+        tetromino.c += dc;
+      }
+
+      const onGround = !this.isValidMovement(tetromino, 1, 0);
+      if (this.framesUntilLock === null && onGround) {
+        this.framesUntilLock = CONFIG.dropLockFrames;
+      } else if (this.framesUntilLock !== null && !onGround) {
+        this.framesUntilLock = null;
+      }
+    }
+
+    hold() {
+      if (this.hasHeld) {
+        return;
+      }
+      if (this.heldTetromino) {
+        const heldtype = this.heldTetromino.kind;
+        this.heldTetromino.kind = this.curTetromino.kind;
+        this.heldTetromino.reset();
+        this.curTetromino.kind = heldtype;
+        this.curTetromino.reset();
+      } else {
+        this.heldTetromino = this.curTetromino;
+        this.heldTetromino.reset();
+        this.curTetromino = this.nextTetromino;
+        this.nextTetromino = this.curBag.pop();
+        if (!this.curBag.length) {
+          this.refillBag();
+        }
+      }
+      this.framesUntilDrop = 0;
+      this.hasHeld = true;
+    }
+
+    isValidMovement(tetromino, dr, dc) {
+      const shape = tetromino.getShape();
+      const row = tetromino.r + dr;
+      const col = tetromino.c + dc;
+      return this.isValid(row, col, shape);
+    }
+
+    isValidRotation(tetromino, rotation) {
+      const shape = tetromino.getRotation(rotation);
+      const row = tetromino.r;
+      const col = tetromino.c;
+
+      let tests;
+      if (tetromino.kind === "I") {
+        tests = WALLKICK_TESTS_I[tetromino.rotation][rotation];
+      } else {
+        tests = WALLKICK_TESTS[tetromino.rotation][rotation];
+      }
+
+      for (const [dr, dc] of tests) {
+        if (this.isValid(row + dr, col + dc, shape)) {
+          return [true, [dr, dc]];
+        }
+      }
+      return [false, [0, 0]];
+    }
+
+    placeCurTetromino() {
+      this.ai.toExecute = null;
+      this.place(this.curTetromino);
+      this.checkLineClears();
+      this.curTetromino = this.nextTetromino;
+      this.nextTetromino = this.curBag.pop();
+      if (!this.curBag.length) {
+        this.refillBag();
+      }
+      this.framesUntilDrop = 0;
+      this.hasHeld = false;
+
+      if (this.getGhost(this.curTetromino).r === this.curTetromino.r) {
+        this.gameOver = true;
+      }
+    }
+
+    place(tetromino) {
+      const shape = tetromino.getShape();
+      for (let tet_r = 0; tet_r < shape.length; tet_r++) {
+        for (let tet_c = 0; tet_c < shape[tet_r].length; tet_c++) {
+          if (!shape[tet_r][tet_c]) {
+            continue;
+          }
+          const board_r = tetromino.r + tet_r;
+          const board_c = tetromino.c + tet_c;
+          if (board_r >= CONFIG.rows || board_c < 0 || board_c >= CONFIG.cols) {
+            continue;
+          }
+
+          if (this.arr[board_r][board_c] === 0) {
+            this.arr[board_r][board_c] = this._p.color(TETROMINO_TYPE[tetromino.kind].color);
+          } else {
+            console.error(
+              `Invalid tetromino (${tetromino.kind}) placement:`
+              + `is ${this.arr[board_r][board_c]}`
+              + `(${board_r}, ${board_c})`
+            );
+          }
+        }
+      }
+    }
+
+    checkLineClears(updateStat = true) {
+      for (let r = 0; r < CONFIG.rows; r++) {
+        if (!this.arr[r].includes(0)) {
+          if (updateStat) {
+            this.lineClears += 1;
+          }
+          this.arr.splice(r, 1);
+          this.arr.splice(0, 0, Array(CONFIG.cols).fill(0));
+        }
+      }
+    }
+
+    getGhost(tetromino) {
+      let dr = 1;
+      while (tetromino.r + dr < this.arr.length && this.isValidMovement(tetromino, dr, 0)) {
+        dr++;
+      }
+      const tetCopy = tetromino.copy();
+      tetCopy.r += dr - 1;
+      return tetCopy;
+    }
+
+    setPressed(key) {
+      if (key === null) {
+        this.pressedKey = null;
+        this.framesUntilRepeatStart = null;
+        this.framesUntilRepeat = 0;
+      } else {
+        this.pressedKey = key;
+        this.framesUntilRepeatStart = CONFIG.autoShiftDelay;
+        this.framesUntilRepeat = 0;
+      }
+    }
+
+    isValid(row, col, shape) {
+      for (let tet_r = 0; tet_r < shape.length; tet_r++) {
+        for (let tet_c = 0; tet_c < shape[tet_r].length; tet_c++) {
+          if (!shape[tet_r][tet_c]) {
+            continue;
+          }
+          const board_r = row + tet_r;
+          const board_c = col + tet_c;
+          if (board_r >= CONFIG.rows || board_c < 0 || board_c >= CONFIG.cols) {
+            return false;
+          } else if (board_r < 0) {
+            // do nothing
+          } else if (this.arr[board_r][board_c]) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+  }
+
+  // sketch.ts
+  const p5Instance = new p5(p => {
+    let board;
+
+    p.setup = () => {
+      const canvas = p.createCanvas(800, 800);
+      canvas.parent("sketch");
+
+      p.frameRate(CONFIG.frameRate);
+
+      CONFIG.board_tl = { x: 0.5 * (p.width - CONFIG.board_w), y: 0.5 * (p.height - CONFIG.board_h) };
+
+      resetBoard();
+      // Initialize HTML config settings after DOM is ready and CONFIG is defined
+      initConfigHTML();
+    };
+
+    p.draw = () => {
+      p.background(250);
+
+      p.fill(0);
+      p.noStroke();
+      p.textAlign(p.CENTER, p.CENTER);
+      p.textSize(24);
+      p.text(`Lines cleared: ${board.lineClears}`, p.width / 2, 50);
+      p.textSize(20);
+      p.text("Next", p.width / 2 + 242, 110);
+      p.text("Hold", p.width / 2 - 241, 110);
+
+      if (board.gameOver) {
+        p.textSize(28);
+        p.text("Game Over", p.width / 2, p.height - 60);
+        document.getElementById("replay-btn").style.visibility = "visible";
+        p.noLoop();
+      }
+      board.draw();
+    };
+
+    p.keyPressed = () => {
+      if (document.activeElement && document.activeElement.classList.contains("settings-number")) {
+        return;
+      }
+      if (p.keyCode === p.LEFT_ARROW) {
+        board.setPressed(PressedKey.LEFT);
+        board.move(board.curTetromino, 0, -1);
+      } else if (p.keyCode === p.RIGHT_ARROW) {
+        board.setPressed(PressedKey.RIGHT);
+        board.move(board.curTetromino, 0, 1);
+      } else if (p.key === " ") {
+        board.moveDrop(board.curTetromino);
+      } else if (p.keyCode === p.DOWN_ARROW) {
+        board.setPressed(PressedKey.DOWN);
+        board.move(board.curTetromino, 1, 0);
+      } else if (p.keyCode === p.UP_ARROW) {
+        board.rotate(board.curTetromino, Rotation.CLOCKWISE);
+      } else if (p.key === "z") {
+        board.rotate(board.curTetromino, Rotation.COUNTERCLOCKWISE);
+      } else if (p.keyCode === p.SHIFT) {
+        board.hold();
+      }
+
+      if (!CONFIG.aiEnabled) {
+        board.ai.displayScore(board.ai.getPotential(board.curTetromino));
+      }
+    };
+
+    p.keyReleased = () => {
+      board.setPressed(null);
+    };
+
+    function resetBoard() {
+      board = new Board(p, 0.5 * (p.width - CONFIG.board_w), 0.5 * (p.height - CONFIG.board_h),
+        CONFIG.board_w, CONFIG.board_h);
+
+      document.getElementById("replay-btn").style.visibility = "hidden";
+      p.loop();
+    }
+
+    // Config settings functions
+    function initConfigHTML() {
+      if (CONFIG.aiEnabled) {
+        document.getElementById("enable-ai-input").setAttribute("checked", "");
+        document.getElementById("ai-delay-input").removeAttribute("disabled");
+        document.getElementById("ai-parallel-input").removeAttribute("disabled");
+      }
+      if (CONFIG.showHint) {
+        document.getElementById("show-hint-input").setAttribute("checked", "");
+      }
+      if (CONFIG.aiParallel) {
+        (document.getElementById("ai-parallel-input")).setAttribute("checked", "");
+      }
+      (document.getElementById("ai-delay-input")).value = String(CONFIG.aiDelay);
+      (document.getElementById("frame-rate-input")).value = String(CONFIG.frameRate);
+      (document.getElementById("drop-frames-input")).value = String(CONFIG.dropFrames);
+      (document.getElementById("lock-frames-input")).value = String(CONFIG.dropLockFrames);
+      (document.getElementById("weight-line-clears")).value = String(CONFIG.weight_lineclears);
+      (document.getElementById("weight-holes")).value = String(CONFIG.weight_holes);
+      (document.getElementById("weight-board-height")).value = String(CONFIG.weight_boardheight);
+      (document.getElementById("weight-placement-height")).value = String(CONFIG.weight_placementheight);
+      (document.getElementById("weight-avg-height-diff")).value = String(CONFIG.weight_avgheightdiff);
+      (document.getElementById("weight-row-flip")).value = String(CONFIG.weight_rowflip);
+      (document.getElementById("weight-col-flip")).value = String(CONFIG.weight_colflip);
+      (document.getElementById("weight-deepest-well")).value = String(CONFIG.weight_deepestwell);
+      if (CONFIG.scaled_holes) {
+        document.getElementById("scaled-holes").setAttribute("checked", "");
+        document.getElementById("exp-holes").removeAttribute("disabled");
+        document.getElementById("stats-holes-label").innerText = "Holes (scaled)";
+      }
+      if (CONFIG.scaled_boardheight) {
+        document.getElementById("scaled-board-height").setAttribute("checked", "");
+        document.getElementById("exp-board-height").removeAttribute("disabled");
+      }
+      if (CONFIG.scaled_placementheight) {
+        document.getElementById("scaled-placement-height").setAttribute("checked", "");
+        document.getElementById("exp-placement-height").removeAttribute("disabled");
+      }
+      (document.getElementById("exp-holes")).value = String(CONFIG.exp_holes);
+      (document.getElementById("exp-board-height")).value = String(CONFIG.exp_boardheight);
+      (document.getElementById("exp-placement-height")).value = String(CONFIG.exp_placementheight);
+    }
+
+
+    function toggleAI() {
+      CONFIG.aiEnabled = !CONFIG.aiEnabled;
+      const aiDelayInput = document.getElementById("ai-delay-input");
+      const aiParallelInput = document.getElementById("ai-parallel-input");
+      if (CONFIG.aiEnabled) {
+        aiDelayInput.removeAttribute("disabled");
+        aiParallelInput.removeAttribute("disabled");
+      } else {
+        aiDelayInput.setAttribute("disabled", "");
+        aiParallelInput.setAttribute("disabled", "");
+      }
+    }
+
+    function toggleShowHint() {
+      CONFIG.showHint = !CONFIG.showHint;
+    }
+
+    function toggleAIParallel() {
+      CONFIG.aiParallel = !CONFIG.aiParallel;
+    }
+
+    function changeSetting(el, setting) {
+      const val = Number(el.value);
+      if (isNaN(val)) {
+        el.value = String(CONFIG[setting]);
+        return;
+      }
+      if (val < MINSETTINGS[setting]) {
+        el.value = String(MINSETTINGS[setting]);
+      }
+      CONFIG[setting] = Number(val);
+      if (setting === "frameRate") {
+        p.frameRate(CONFIG.frameRate);
+      }
+      if (CONFIG.aiEnabled && board.ai.toExecute) {
+        board.ai.displayScore(board.ai.toExecute);
+      } else if (!CONFIG.aiEnabled) {
+        board.ai.displayScore(board.ai.getPotential(board.curTetromino));
+      }
+      if (CONFIG.aiEnabled && (["aiDelay", "dropFrames", "dropLockFrames"].includes(setting))) {
+        board.ai.toExecute = board.ai.selectDest(board.framesUntilDrop);
+      }
+    }
+
+    function toggleScaled(setting) {
+      const formattedSetting = setting.replace("-", "");
+      const scaledSetting = "scaled_" + formattedSetting;
+
+      CONFIG[scaledSetting] = !CONFIG[scaledSetting];
+      if (CONFIG[scaledSetting]) {
+        if (setting === "holes") {
+          document.getElementById("stats-holes-label").innerText = "Holes (scaled)";
+        }
+        document.getElementById("exp-" + setting).removeAttribute("disabled");
+      } else {
+        if (setting === "holes") {
+          document.getElementById("stats-holes-label").innerText = "Holes";
+        }
+        document.getElementById("exp-" + setting).setAttribute("disabled", "");
+      }
+    }
+
+    function toggleSettings(el) {
+      const basicSettings = document.getElementById("basic-settings");
+      const advancedSettings = document.getElementById("advanced-settings");
+      const settingsContent = document.getElementById("settings-content");
+
+      if (el.innerText.includes("Advanced")) {
+        basicSettings.classList.add("collapsed");
+        advancedSettings.classList.remove("collapsed");
+        settingsContent.classList.remove("collapsed");
+        el.innerText = "Basic";
+      } else {
+        basicSettings.classList.remove("collapsed");
+        advancedSettings.classList.add("collapsed");
+        settingsContent.classList.add("collapsed");
+        el.innerText = "Advanced";
+      }
+    }
+
+    document.getElementById("replay-btn")?.addEventListener("click", () => resetBoard());
+    document.getElementById("settings-toggle")?.addEventListener("click", el => toggleSettings(el.target));
+
+    document.getElementById("enable-ai-input")?.addEventListener("click", () => toggleAI());
+    document.getElementById("show-hint-input")?.addEventListener("click", () => toggleShowHint());
+    document.getElementById("ai-parallel-input")?.addEventListener("click", () => toggleAIParallel());
+
+    document.getElementById("ai-delay-input")?.addEventListener("change", el => changeSetting(el.target, "aiDelay"));
+    document.getElementById("frame-rate-input")?.addEventListener("change", el => changeSetting(el.target, "frameRate"));
+    document.getElementById("drop-frames-input")?.addEventListener("change", el => changeSetting(el.target, "dropFrames"));
+    document.getElementById("lock-frames-input")?.addEventListener("change", el => changeSetting(el.target, "dropLockFrames"));
+    document.getElementById("weight-line-clears")?.addEventListener("change", el => changeSetting(el.target, "weight_lineclears"));
+    document.getElementById("weight-holes")?.addEventListener("change", el => changeSetting(el.target, "weight_holes"));
+    document.getElementById("weight-board-height")?.addEventListener("change", el => changeSetting(el.target, "weight_boardheight"));
+    document.getElementById("weight-placement-height")?.addEventListener("change", el => changeSetting(el.target, "weight_placementheight"));
+    document.getElementById("weight-avg-height-diff")?.addEventListener("change", el => changeSetting(el.target, "weight_avgheightdiff"));
+    document.getElementById("weight-row-flip")?.addEventListener("change", el => changeSetting(el.target, "weight_rowflip"));
+    document.getElementById("weight-col-flip")?.addEventListener("change", el => changeSetting(el.target, "weight_colflip"));
+    document.getElementById("weight-deepest-well")?.addEventListener("change", el => changeSetting(el.target, "weight_deepestwell"));
+
+    document.getElementById("scaled-holes")?.addEventListener("click", () => toggleScaled("holes"));
+    document.getElementById("exp-holes")?.addEventListener("change", el => changeSetting(el.target, "exp_holes"));
+    document.getElementById("scaled-board-height")?.addEventListener("click", () => toggleScaled("board-height"));
+    document.getElementById("exp-board-height")?.addEventListener("change", el => changeSetting(el.target, "exp_boardheight"));
+    document.getElementById("scaled-placement-height")?.addEventListener("click", () => toggleScaled("placement-height"));
+    document.getElementById("exp-placement-height")?.addEventListener("change", el => changeSetting(el.target, "exp_placementheight"));
+
+    window.addEventListener("keydown", function (e) {
+      if (!document.activeElement?.className.includes("settings-number") && [32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+      }
+    }, false);
+  });
+</script>
+</html>
